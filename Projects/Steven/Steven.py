@@ -1,5 +1,6 @@
 
 from tkinter import *
+from tkinter.ttk import *
 from tkinter import messagebox
 from tkinter import filedialog
 import re
@@ -74,6 +75,7 @@ def rename():
     newname=new_name_entry.get()
     oldname=old_name_entry.get()
     location=myStatus._location
+    progress['value']+=100/myStatus._length
     if not (newname==oldname):
         os.rename(location+"/"+oldname+".pdf",location+"/"+newname+".pdf")
     if myStatus.finished:
@@ -101,6 +103,7 @@ def non_left():
     clear(end_code_entry)
     Change_name_button.configure(state='disable')
     messagebox.showinfo("Completed", "All Files in this folder are converted.\nPlease select a new folder")
+    progress['value']=0
 
 def load_document():
     myStatus.new_document()
@@ -124,6 +127,7 @@ def change_folder():
         return
     load_document()
     Change_name_button.configure(state='normal')
+    
 
     
 
@@ -131,7 +135,7 @@ def change_folder():
 # Create the main tkinter window
 root = Tk()
 root.title("Steven's rename tool")
-root.geometry('400x400')
+root.geometry('400x420')
 input_width=40
 
 License = Button(root,text="License",command=license)
@@ -149,6 +153,9 @@ folder_entry.insert(0,"dcdd")
 folder_button = Button(root, text="Change folder",command=change_folder)
 folder_button.pack()
 
+
+progress = Progressbar(root, orient = HORIZONTAL, length = 100, mode = 'determinate') 
+progress.pack()
 old_name_label = Label(root, text="Current name:")
 old_name_label.pack()
 old_name_entry = Entry(state=DISABLED,width=input_width)
