@@ -77,9 +77,18 @@ def _callback():
     lastname=Last_name_entry.get().strip().replace(" ","-")
     geboorte=date_name_entry.get().strip()
     end_code=end_code_entry.get().strip().replace(" ","_")
-    
+    if len(geboorte)==5:
+        date_name_entry.insert(0,'0')
+        geboorte='0'+geboorte
+    elif len(geboorte)==4:
+        date_name_entry.insert(0,'0')
+        date_name_entry.insert(2,'0')
+        geboorte='0'+geboorte[0:1]+'0'+geboorte[1:]
+
     if not (len(geboorte)==6):
-       date_name_entry.config(foreground='red')
+       date_name_entry.config(foreground='red')       
+    elif int(geboorte[0:2])>31 or int(geboorte[2:4])>12:
+        date_name_entry.config(foreground='red')
     else:
         date_name_entry.config(foreground='black')
         geboorte=geboorte[4:6]+geboorte[2:4]+geboorte[0:2]
