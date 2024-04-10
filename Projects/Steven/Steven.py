@@ -39,6 +39,7 @@ class Status(Tk):
         self._current=None
         self._results = None
         self._length=None
+        self._correct=False
 
     def new_folder(self,location):
         self._location=location
@@ -64,6 +65,8 @@ class Status(Tk):
             # Done
             self.finished=True
 
+    def set_correct(self,bool):
+        self._correct=bool
 
 def callback(event):
     # After 1 ms call `_callback`
@@ -101,9 +104,13 @@ def get_endcode(name):
     b= re.search('\d',name)
     loc=b.span()[0]
     return name[loc:]
-def rename_event(event):
-    if Change_name_button['state']=='normal':
+
+
+def rename_event(event):    
+    if myStatus._correct:
         rename()
+
+
 
 def rename():
     newname=new_name_entry.get()
@@ -136,6 +143,7 @@ def non_left():
     clear(new_name_entry)
     clear(end_code_entry)
     Change_name_button.configure(state='disable')
+    myStatus.set_correct(False)
     messagebox.showinfo("Completed", "All Files in this folder are converted.\nPlease select a new folder")
     progress['value']=0
 
@@ -148,6 +156,7 @@ def load_document():
     date_name_entry.config(foreground='black')
     clear(new_name_entry,myStatus.current_file_name)
     clear(end_code_entry,get_endcode(myStatus.current_file_name))
+    
 
 def change_folder():
     file_path = filedialog.askdirectory()
@@ -161,6 +170,7 @@ def change_folder():
         return
     load_document()
     Change_name_button.configure(state='normal')
+    myStatus.set_correct(True)
     
 
     
@@ -237,7 +247,6 @@ end_code_entry.bind("<Key>",callback)
 
 
 Change_name_button = Button(root, text="Rename",command=rename,state="disabled")
-Change_name_button.bind("<Enter>")
 Change_name_button.pack()
 myStatus=Status()
 
