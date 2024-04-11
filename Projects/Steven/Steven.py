@@ -32,6 +32,8 @@ import re
 import glob
 import os
 
+
+
 class Status(Tk):
 
     def __init__(self):
@@ -45,12 +47,17 @@ class Status(Tk):
         self._location=location
         self._current=0
         self._results = glob.glob(location+"/*.pdf")
+        self._results_left=[f for f in self._results if re.match('\D{6}',f.split('\\')[-1])]
         self._length=len(self._results)
-        
+        self._length_left=len(self._results_left)
         if self._length >0:
             self.finished=False
         else:
             self.finished=True
+        if self._length == self._length_left:
+            self._newfolder=True
+        else:
+            self._newfolder=False
 
     def new_document(self):
         
@@ -61,13 +68,33 @@ class Status(Tk):
         os.startfile(self.current_file)
         self._current+=1
         
-        if self._current==self._length:
+        self._check_finished()
+        
+    def _check_finished(self):
+        check = self._length if self._newfolder else self._length_left
+        if self._current == check:
             # Done
             self.finished=True
-
+        
     def set_correct(self,bool):
+        '''Set the flag whether you can start renaming'''
         self._correct=bool
 
+    def skipoldfiles(self):
+        '''Remove the files with \d{6} from the list of files'''
+        progressbar_incr=self._length-self._length_left
+        self._results=self._results_left
+        if self._length_left ==0:
+            self.finished=True
+        
+        progress.step(progressbar_incr*100/self._length)
+
+    def runfullfolder(self):
+        self._newfolder=True
+
+    def get_location(self):
+        return self._location
+       
 def callback(event):
     # After 1 ms call `_callback`
     # That is to make sure that tkinter has handled the keyboard press
@@ -102,27 +129,42 @@ def _callback():
 def get_endcode(name):
     # find Endcode
     b= re.search('\d',name)
-    loc=b.span()[0]
-    return name[loc:]
+    try:
+        loc=b.span()[0]
+        return name[loc:]
+    except:
+        return ''
 
 
 def rename_event(event):    
     if myStatus._correct:
         rename()
 
-
-
 def rename():
     newname=new_name_entry.get()
     oldname=old_name_entry.get()
-    location=myStatus._location
-    progress['value']+=100/myStatus._length
+    location=myStatus.get_location()
+    
     if not (newname==oldname):
-        os.rename(location+"/"+oldname+".pdf",location+"/"+newname+".pdf")
+        if os.path.isfile(location+"/"+newname+".pdf"):
+            if not messagebox.askokcancel("Duplicate name","Chosen filename already exists, renaming will overwrite old file.", icon='warning'):
+                return
+            else:
+                '''Remove file to be overwritten to prevent rename to fail'''
+                os.remove(location+"/"+newname+".pdf")
+        try:
+            os.rename(location+"/"+oldname+".pdf",location+"/"+newname+".pdf")
+            
+        except:
+            messagebox.showerror("Rename Failed","Cannot access file anymore, reload the folder!")
+            change_folder()
+            return
+            
     if myStatus.finished:
         non_left()
     else:
         load_document()
+    progress.step(100/myStatus._length)
 
 def license():
     messagebox.showinfo("MIT Open Source License", "Copyright 2024 Steven de windt\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.")
@@ -135,7 +177,7 @@ def clear(input,info=None,state_after="normal"):
         input.insert(0,info)
     input.configure(state=state_after)
 
-def non_left():
+def non_left(bool=True):
     clear(old_name_entry,None,'readonly')
     clear(first_name_entry)
     clear(Last_name_entry)
@@ -144,8 +186,11 @@ def non_left():
     clear(end_code_entry)
     Change_name_button.configure(state='disable')
     myStatus.set_correct(False)
-    messagebox.showinfo("Completed", "All Files in this folder are converted.\nPlease select a new folder")
-    progress['value']=0
+    if bool:
+        messagebox.showinfo("Completed", "All Files in this folder are converted.\nPlease select a new folder")
+    else:
+        messagebox.showinfo("Empty Folder", "There are no PDF's in this folder to convert.\nPlease select a new folder")
+    progress_int.set(0)
 
 def load_document():
     myStatus.new_document()
@@ -160,19 +205,27 @@ def load_document():
 
 def change_folder():
     file_path = filedialog.askdirectory()
+    progress_int.set(0)
     folder_entry.configure(state="normal")
     folder_entry.delete(0,END)
     folder_entry.insert(0,file_path)
     folder_entry.configure(state="readonly")
     myStatus.new_folder(file_path)
+
+    if not myStatus._newfolder:
+        if messagebox.askyesno("Converted files detected!", "Some files in this folder already start with 6 digits!\nDo you want to skip these files?"):
+            myStatus.skipoldfiles()
+        else:
+            myStatus.runfullfolder()
+
     if myStatus.finished:
-        non_left()
+        non_left(False)
         return
     load_document()
     Change_name_button.configure(state='normal')
     myStatus.set_correct(True)
-    
 
+    
     
 
 
@@ -188,17 +241,14 @@ License.pack()
 # Create labels and entry fields for each input
 folder = Label(root, text="Folder:")
 folder.pack()
-
-
 folder_entry = Entry(state="readonly",width=input_width)
-
 folder_entry.pack()
-folder_entry.insert(0,"dcdd")
+
 folder_button = Button(root, text="Change folder",command=change_folder)
 folder_button.pack()
 
-
-progress = Progressbar(root, orient = HORIZONTAL, length = 100, mode = 'determinate') 
+progress_int=IntVar()
+progress = Progressbar(root, orient = HORIZONTAL, length = 100, mode = 'determinate',variable=[progress_int]) 
 progress.pack()
 old_name_label = Label(root, text="Current name:")
 old_name_label.pack()
