@@ -134,7 +134,7 @@ def _callback():
     firstname=first_name_entry.get().strip().capitalize().replace(" ","-")
     lastname=Last_name_entry.get().strip().capitalize().replace(" ","-")
     birthday=date_name_entry.get().strip()
-    end_code=end_code_entry.get().strip().replace(" ","_")
+    endcode=end_code_entry.get().strip().replace(" ","_")
     
     # Birthday Sanity Check
     if not birthday.isdigit():
@@ -183,7 +183,7 @@ def _callback():
     birthday=birthday[4:6]+birthday[2:4]+birthday[0:2]
     if firstname and lastname and birthday:
         new_name_entry.delete(0,END)
-        new_name_entry.insert(0,birthday+"_"+firstname+"_"+lastname+"_"+end_code)
+        new_name_entry.insert(0,birthday+"_"+firstname+"_"+lastname+"_"+endcode)
 
 def get_endcode(name):
     '''Extract the endcode (starting with a digit) from the original filename'''
