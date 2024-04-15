@@ -207,21 +207,30 @@ def rename():
     oldname=old_name_entry.get()
     location=myStatus.get_location()
     
+    # Old version that works
     if not (newname==oldname):
-        if os.path.isfile(location+"/"+newname+".pdf"):
-            if not messagebox.askokcancel("Duplicate name","Chosen filename already exists, renaming will overwrite old file.", icon='warning'):
-                return
-            else:
-                '''Remove file to be overwritten to prevent rename to fail'''
-                os.remove(location+"/"+newname+".pdf")
         try:
             os.rename(location+"/"+oldname+".pdf",location+"/"+newname+".pdf")
-            
         except:
-            '''In Case file is removed during session'''
-            messagebox.showerror("Rename Failed","Cannot access file anymore, reload the folder!")
-            change_folder()
-            return
+            print(f"Cannot rename {location}/{oldname} for unknown reason, please check folder.")
+
+
+    # For some reason broken
+    # if not (newname==oldname):
+    #     if os.path.isfile(location+"/"+newname+".pdf"):
+    #         if not messagebox.askokcancel("Duplicate name","Chosen filename already exists, renaming will overwrite old file.", icon='warning'):
+    #             return
+    #         else:
+    #             '''Remove file to be overwritten to prevent rename to fail'''
+    #             os.remove(location+"/"+newname+".pdf")
+    #     try:
+    #         os.rename(location+"/"+oldname+".pdf",location+"/"+newname+".pdf")
+            
+    #     except:
+    #         '''In Case file is removed during session'''
+    #         messagebox.showerror("Rename Failed","Cannot access file anymore, reload the folder!")
+    #         change_folder()
+    #         return
             
     if myStatus.finished:
         non_left()
