@@ -211,6 +211,7 @@ def rename():
     if not (newname==oldname):
         try:
             os.rename(location+"/"+oldname+".pdf",location+"/"+newname+".pdf")
+            print(f"Renamed: {location}/{oldname} --> {location}/{newname}")
         except:
             print(f"Cannot rename {location}/{oldname} for unknown reason, please check folder.")
 
